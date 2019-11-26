@@ -56,7 +56,7 @@ class OptionParser(optparse.OptionParser):
 # #################################### Lecture de fichier de parametres "Key=Value"
 def read_folders(fic_txt):
 
-    repCode = repWork = repL1 = repL2 = repMaja = repCAMS = repCAMS_raw = None
+    repCode = repWork = repL1 = repL2 = repMaja = repCAMS = repCAMS_raw = repDtm = None
 
     with file(fic_txt, 'r') as f:
         for ligne in f.readlines():
@@ -72,33 +72,39 @@ def read_folders(fic_txt):
                 repMaja = (ligne.split('=')[1]).strip()
             if ligne.find('repCAMS') == 0:
                 repCAMS = (ligne.split('=')[1]).strip()
+            if ligne.find('repDtm') == 0:
+                repDtm = (ligne.split('=')[1]).strip()
 
     missing = False
 
     if repCode is None:
         logger.error(
-            "repCode is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja")
+            "repCode is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja, repDtm")
         missing = True
     if repWork is None:
         logger.error(
-            "repWork is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja")
+            "repWork is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja, repDtm")
         missing = True
     if repL1 is None:
         logger.error(
-            "repL1 is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja")
+            "repL1 is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja, repDtm")
         missing = True
     if repL2 is None:
         logger.error(
-            "repL2 is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja")
+            "repL2 is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja, repDtm")
         missing = True
     if repMaja is None:
         logger.error(
-            "repCode is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja")
+            "repCode is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja, repDtm")
         missing = True
     if repCAMS is None:
         logger.info(
-            "repCAMS is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja")
+            "repCAMS is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja, repDtm")
         logger.info("Processing without CAMS")
+    if repDtm is None:
+        logger.error(
+            "repDtm is missing from configuration file. Needed : repCode, repWork, repL1, repL2, repMaja, repDtm")
+        missing = True
 
     if missing:
         raise Exception("Configuration file is not complete. See log file for more information.")
@@ -124,6 +130,9 @@ def read_folders(fic_txt):
         logger.error("repCAMS %s is missing", repCAMS)
     if repCAMS_raw is not None and not os.path.isdir(repCAMS_raw):
         logger.error("repCAMS %s is missing", repCAMS_raw)
+    if not os.path.isdir(repDtm):
+        logger.error("repDtm %s is missing", repDtm)
+        directory_missing = True
 
     if directory_missing:
         raise Exception("One or more directories defined in foldersconfig files are missing")
@@ -131,7 +140,7 @@ def read_folders(fic_txt):
     sys.path.insert(0, repCode+"/cams_download")
     from convert_CAMS_DBL import exocam_creation
 
-    return repCode, repWork, repL1, repL2, repMaja, repCAMS, repCAMS_raw
+    return repCode, repWork, repL1, repL2, repMaja, repCAMS, repCAMS_raw, repDtm
 
 
 # =============== Module to copy and link files
@@ -246,7 +255,7 @@ def test_valid_L2A(L2A_DIR):
 
 def start_maja(folder_file, gipp, lut, site, tile, orbit, nb_backward, options, debug_mode):
     # =================check directories
-    (repCode, repWork, repL1, repL2, maja, repCams, repCamsRaw) = read_folders(folder_file)
+    (repCode, repWork, repL1, repL2, maja, repCams, repCamsRaw, repDtm) = read_folders(folder_file)
 
     repCams = manage_rep_cams(repCams, repCamsRaw, repWork)
 
@@ -254,7 +263,7 @@ def start_maja(folder_file, gipp, lut, site, tile, orbit, nb_backward, options, 
     if not(os.path.exists(repConf)):
         logger.error("Config dir %s does not exist", repConf)
         sys.exit(-1)
-    repDtm = repCode + "/DTM"
+    #repDtm = repCode + "/DTM"
     if not(os.path.exists(repDtm)):
         logger.error("DTM dir %s does not exist", repDtm)
         sys.exit(-1)
